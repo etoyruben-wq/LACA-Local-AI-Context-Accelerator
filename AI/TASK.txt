@@ -1,0 +1,1 @@
+Edit AI/TASK.md or AI/ТЗ_UA.md before running the agent.
