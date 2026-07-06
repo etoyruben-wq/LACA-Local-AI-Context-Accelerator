@@ -1,0 +1,5 @@
+CENTER|SampleProject|focus=fix tests|top_k=10|coord=x,z,y|version=0.2.0
+RULE|expand_only_top_points|do_one_action|write_RESULT_vmem_after_action
+POINT|P000001|domain=tests|status=pass|score=0.9123|x=0.9000|z=0.8500|y=0.9500|file=examples/sample_project/test_app.py
+POINT|P000002|domain=source|status=unknown|score=0.8123|x=0.8000|z=0.4000|y=1.0000|file=examples/sample_project/app.py
+NEXT|read_top_points|choose_one_action|write_RESULT.vmem
