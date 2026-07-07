@@ -16,6 +16,7 @@ STATE_DIR_DEFAULT = PROJECT_ROOT / "AI_STATE"
 sys.path.insert(0, str(LOCAL_SRC))
 
 from laca.cli import main as laca_main  # noqa: E402
+from laca.code_graph import main as graph_main  # noqa: E402
 
 DEFAULT_EXCLUDES = ",".join([
     ".git", ".hg", ".svn", ".idea", ".vscode",
@@ -112,7 +113,7 @@ def write_task_state(out_dir: Path, state_dir: Path, mode: str) -> dict:
             previous = {}
     changed = previous.get("sha256") != task["sha256"]
     record = {
-        "version": "0.8.1",
+        "version": "0.8.2",
         "mode": mode,
         "time": time.time(),
         "task_file": task["path"],
@@ -197,6 +198,9 @@ def cmd_scan(args: argparse.Namespace) -> int:
     rc = laca_main(laca_args)
     if rc == 0:
         inject_task_into_outputs(out_dir, state_dir, task_record)
+        if not getattr(args, "no_graph", False):
+            run_code_graph_layer(out_dir, state_dir, full=getattr(args, "graph_full", False), max_files=getattr(args, "graph_max_files", 500))
+            inject_graph_into_outputs(out_dir)
     return rc
 
 
@@ -226,6 +230,9 @@ def cmd_continue(args: argparse.Namespace) -> int:
     rc = laca_main(laca_args)
     if rc == 0:
         inject_task_into_outputs(out_dir, state_dir, task_record)
+        if not getattr(args, "no_graph", False):
+            run_code_graph_layer(out_dir, state_dir, full=getattr(args, "graph_full", False), max_files=getattr(args, "graph_max_files", 500))
+            inject_graph_into_outputs(out_dir)
     return rc
 
 
@@ -238,6 +245,74 @@ def cmd_result(args: argparse.Namespace) -> int:
         return 2
     return laca_main(["result", str(result_file), "--out", str(out_dir), "--state", str(state_dir)])
 
+
+
+def run_code_graph_layer(out_dir: Path, state_dir: Path, *, full: bool = False, max_files: int = 500, query: str = "") -> int:
+    """Build an optional code graph / attention guide.
+
+    The graph layer is intentionally compact by default: it uses action_points.tsv
+    as seed input so a large project does not dump thousands of files into the
+    agent context. Use `AI/run.py graph --full` when a full code-map export is
+    needed.
+    """
+    seed_file = out_dir / "action_points.tsv"
+    args = [
+        str(PROJECT_ROOT),
+        "--out", str(out_dir),
+        "--state", str(state_dir),
+        "--seed-file", str(seed_file),
+        "--max-files", str(max_files),
+        "--exclude-patterns", DEFAULT_EXCLUDES,
+    ]
+    if full:
+        args.append("--full")
+    if query:
+        args.extend(["--query", query])
+    try:
+        return graph_main(args)
+    except Exception as exc:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "graph_error.txt").write_text(f"CODE_GRAPH_ERROR={exc}\n", encoding="utf-8")
+        print(f"Code graph layer skipped: {exc}", file=sys.stderr)
+        return 0
+
+
+def inject_graph_into_outputs(out_dir: Path) -> None:
+    context = out_dir / "context_state.vmem"
+    attention = out_dir / "code_attention.vmem"
+    if context.exists() and attention.exists():
+        text = context.read_text(encoding="utf-8", errors="replace")
+        if "GRAPH|version=" not in text:
+            graph_lines = attention.read_text(encoding="utf-8", errors="replace").splitlines()[:28]
+            new_text = text.rstrip() + "\n" + "\n".join(graph_lines) + "\n"
+            context.write_text(new_text, encoding="utf-8")
+    report = out_dir / "context_report.md"
+    if report.exists() and (out_dir / "attention_guide.md").exists():
+        text = report.read_text(encoding="utf-8", errors="replace")
+        if "## Code graph / attention guide" not in text:
+            block = """
+## Code graph / attention guide
+
+LACA generated an optional code graph layer for transformer-friendly routing:
+
+- `AI_OUT/code_graph.json`
+- `AI_OUT/code_symbols.tsv`
+- `AI_OUT/import_edges.tsv`
+- `AI_OUT/call_edges.tsv`
+- `AI_OUT/attention_guide.md`
+- `AI_OUT/graph.html`
+
+Use this as an attention map. Do not paste the full graph into the prompt unless the user asks for it.
+"""
+            report.write_text(text.rstrip() + "\n" + block, encoding="utf-8")
+
+
+def cmd_graph(args: argparse.Namespace) -> int:
+    out_dir = Path(args.out) if args.out else OUT_DIR_DEFAULT
+    state_dir = Path(args.state) if args.state else STATE_DIR_DEFAULT
+    rc = run_code_graph_layer(out_dir, state_dir, full=args.full, max_files=args.max_files, query=args.query or "")
+    inject_graph_into_outputs(out_dir)
+    return rc
 
 def cmd_status(args: argparse.Namespace) -> int:
     state_dir = Path(args.state) if args.state else STATE_DIR_DEFAULT
@@ -261,6 +336,9 @@ def add_common_scan_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--include-patterns", default="", help="Comma-separated include patterns")
     parser.add_argument("--exclude-patterns", default="", help="Comma-separated exclude patterns")
     parser.add_argument("--progress", action="store_true", help="Print scan progress")
+    parser.add_argument("--no-graph", action="store_true", help="Skip optional code graph / attention guide layer")
+    parser.add_argument("--graph-full", action="store_true", help="Build full code graph up to --graph-max-files")
+    parser.add_argument("--graph-max-files", type=int, default=500, help="Max files for graph layer")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -277,6 +355,14 @@ def build_parser() -> argparse.ArgumentParser:
     cont = sub.add_parser("continue", help="Continue from saved AI_STATE map; update changed files only")
     add_common_scan_args(cont)
     cont.set_defaults(func=cmd_continue)
+
+    graph = sub.add_parser("graph", help="Build optional AST/code graph and transformer attention guide")
+    graph.add_argument("--out", default="", help="Output folder. Default: ../AI_OUT")
+    graph.add_argument("--state", default="", help="Persistent state folder. Default: ../AI_STATE")
+    graph.add_argument("--full", action="store_true", help="Scan all supported code files up to --max-files")
+    graph.add_argument("--max-files", type=int, default=500, help="Maximum code files to parse")
+    graph.add_argument("--query", default="", help="Optional query to explain against code_graph.json")
+    graph.set_defaults(func=cmd_graph)
 
     result = sub.add_parser("result", help="Record RESULT.vmem into AI_STATE history and change log")
     result.add_argument("result_file", nargs="?", default="", help="RESULT.vmem path. Default: ../RESULT.vmem")
@@ -297,7 +383,7 @@ def main(argv=None) -> int:
         # Default behavior for agents: continue if possible, otherwise first scan.
         return cmd_continue(argparse.Namespace(
             focus="", top_k=25, out="", state="", project_name="", include_patterns="",
-            exclude_patterns="", progress=False,
+            exclude_patterns="", progress=False, no_graph=False, graph_full=False, graph_max_files=500,
         ))
     args = parser.parse_args(argv)
     if not hasattr(args, "func"):

@@ -29,3 +29,5 @@ AI_OUT/context_report.md
 ```cmd
 py AI\run.py result
 ```
+
+Після scan агент також може прочитати `AI_OUT/attention_guide.md`, якщо задача стосується коду. Це карта уваги, а не заміна читання коду.

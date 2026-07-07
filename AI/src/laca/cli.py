@@ -15,7 +15,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Iterable, Sequence
 
-VERSION = "0.8.1"
+VERSION = "0.8.2"
 
 DEFAULT_EXCLUDE_DIRS = {
     ".git", ".hg", ".svn", ".idea", ".vscode", ".cache", ".pytest_cache",

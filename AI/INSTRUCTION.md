@@ -29,3 +29,5 @@ AI_OUT/context_report.md
 ```cmd
 py AI\run.py result
 ```
+
+After scan, read `AI_OUT/attention_guide.md` when the task is code-related. Use it as an attention map, not as a full prompt dump.

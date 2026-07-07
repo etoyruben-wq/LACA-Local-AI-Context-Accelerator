@@ -35,3 +35,5 @@ AI_OUT/context_report.md
 ```cmd
 py AI\run.py result
 ```
+
+After continue, read `AI_OUT/attention_guide.md` when the task is code-related. Do not paste the full `code_graph.json` into the prompt unless explicitly needed.

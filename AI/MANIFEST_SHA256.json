@@ -1,126 +1,122 @@
 {
-  "version": "0.8.1",
-  "root": "AI",
-  "files": [
-    {
-      "path": "CHANGELOG.md",
-      "sha256": "0b9affa707f336ccb21e2d3e5d5f2087bc33b7389ffa24ac3b2cd17a23dd9618",
-      "size": 508
-    },
-    {
-      "path": "CONTINUE.md",
-      "sha256": "495a41573404a3f0ec652f0c1dd46f1fc8a52d2c8384ee3c2012bb994f0c7051",
-      "size": 536
-    },
-    {
-      "path": "INSTRUCTION.md",
-      "sha256": "898bee7aff483874ba23236f759d17ffa2215c59912aa68a74084e0366a0ea18",
-      "size": 424
-    },
-    {
-      "path": "PUBLIC_RANKING_NOTES.md",
-      "sha256": "06a6d57ac207615c3778781a33cfb5d66d8e531ea38a34199459631e61ae4ec8",
-      "size": 446
-    },
-    {
-      "path": "README.md",
-      "sha256": "4a7f0170f6ae70bddfe78286f8393edba4a49fef8efde6b61cf825fcc6700e7c",
-      "size": 851
-    },
-    {
-      "path": "RUN_CONTINUE.bat",
-      "sha256": "1c821120640aa5414cc023e780136b7e519406cc982a97075c9cfebd42bac2f0",
-      "size": 77
-    },
-    {
-      "path": "RUN_RESULT.bat",
-      "sha256": "fe96f5bed9236eb5792bc996e618cc6dab09bdef039d3e9c6c023edd0aaec64f",
-      "size": 73
-    },
-    {
-      "path": "RUN_SCAN.bat",
-      "sha256": "3211a95b9afd8f6a63ac5e8dc241e3dfc1aa5b85db66b489b00e618bdc398e46",
-      "size": 69
-    },
-    {
-      "path": "RUN_STATUS.bat",
-      "sha256": "583006b3c296c3da18d72284fce24ef7f392740777fe113c31e775440cf66c0a",
-      "size": 73
-    },
-    {
-      "path": "TASK.md",
-      "sha256": "77abf6208143fa53bdd4b21df537dc4cbd00f72d1a1eec98cca9c5a7594037e8",
-      "size": 177
-    },
-    {
-      "path": "TASK.txt",
-      "sha256": "80041170dfcd6ced2c77fa03aea1caaa3062dff4d7c57310bec720bc6a51bb22",
-      "size": 59
-    },
-    {
-      "path": "USER_MANUAL.md",
-      "sha256": "24eaf8c015ffef637ed81253ffffb8961ec541818b981616db83af799b8a0373",
-      "size": 1473
-    },
-    {
-      "path": "USER_PROMPT_CONTINUE_EN.txt",
-      "sha256": "bac1ea564789c43c05735df05c72e2d1cb9a3c8e7f1e7585bb145b41e52fd86b",
-      "size": 88
-    },
-    {
-      "path": "USER_PROMPT_CONTINUE_UA.txt",
-      "sha256": "bf668f537856ad2bd0baeca8685470f24dbe6160a4ffc776de4c541e25acc9b0",
-      "size": 116
-    },
-    {
-      "path": "USER_PROMPT_FOR_ANTIGRAVITY_EN.txt",
-      "sha256": "24c8fae09cb8f62a26ca712d8ffc877ad789008f267943d8b9b53f0e3026cc5a",
-      "size": 86
-    },
-    {
-      "path": "USER_PROMPT_FOR_ANTIGRAVITY_UA.txt",
-      "sha256": "aa1aaa38d67ffa6907c33faaf725ed56d74b95edbf16ff7fd54b147b20a07df7",
-      "size": 123
-    },
-    {
-      "path": "run.py",
-      "sha256": "9bfafe6ea4ef70b3eb0f59c226885389b8cdc4c6d6cb47ef924dd517c24c78ac",
-      "size": 12682
-    },
-    {
-      "path": "src/laca/__init__.py",
-      "sha256": "39c97bf616db1fcfe376be5d182f74551d5c02f65cd3945cd2d919b6d527323a",
-      "size": 22
-    },
-    {
-      "path": "src/laca/cli.py",
-      "sha256": "9eb9b92f4cd228a9d1bee5536746f88b75866870b6a83b523a505cb4a3ac9457",
-      "size": 27256
-    },
-    {
-      "path": "src/laca/field_ranker.cpp",
-      "sha256": "44196dbf6d236c020fe58488d6ac0b8b18104e2ad4c95df56236b15257ee4b17",
-      "size": 2169
-    },
-    {
-      "path": "ІНСТРУКЦІЯ_UA.md",
-      "sha256": "f6b3a0094cc1c8ecefb59e0a7aae1523b868ee95f22848813f2779599bf32129",
-      "size": 584
-    },
-    {
-      "path": "МАНУАЛ_UA.md",
-      "sha256": "2fdcd46ae4ac2ee3d3fbf8decab585f983c9d4aafafd8d3a2f3d038973aa8022",
-      "size": 2234
-    },
-    {
-      "path": "ПРОДОВЖИТИ_UA.md",
-      "sha256": "f285d044cc06fd3eb442038ea49924664698a427c1fb6276722d6e58d29e868c",
-      "size": 714
-    },
-    {
-      "path": "ТЗ_UA.md",
-      "sha256": "12e3609ab68ea9b4f8b39e36d919c0c2e73bfe2dd6616f8fccba081cb9ac31e7",
-      "size": 240
-    }
-  ]
+  "CHANGELOG.md": {
+    "sha256": "5ac70a87edad31a0bc566cf05c1933973cfd39952dcefcbb5ea83de5ace0bdfa",
+    "bytes": 1051
+  },
+  "CODE_GRAPH_LAYER.md": {
+    "sha256": "6226d88d1ddd7e96f962a17487fb149a6f4c36fbf53422fbee2f11d56b0472cd",
+    "bytes": 1738
+  },
+  "CONTINUE.md": {
+    "sha256": "350959188361e9e7242e169919e4ea871e2f309df5c608c7281d5d8e2d987d71",
+    "bytes": 699
+  },
+  "INSTRUCTION.md": {
+    "sha256": "847598ea79b5b0180332d4ac872722693954b10926326da8ae45220e64291bf0",
+    "bytes": 556
+  },
+  "MANIFEST_SHA256.json": {
+    "sha256": "d258fd5682c5fe9650ea4ea797460fa26a436158f90d32d8902ee2a625dd3a6d",
+    "bytes": 3912
+  },
+  "MANIFEST_SHA256.txt": {
+    "sha256": "a961d5707b9f06b642bc16bb8d6b4144347c5aaa70cfe1d58b117caf54e9ad64",
+    "bytes": 2469
+  },
+  "PUBLIC_RANKING_NOTES.md": {
+    "sha256": "06a6d57ac207615c3778781a33cfb5d66d8e531ea38a34199459631e61ae4ec8",
+    "bytes": 446
+  },
+  "README.md": {
+    "sha256": "a3f493e5502d6fbc6cdd4c2b370e2b205eeae53eb2100dd595e856a7bb33c2d2",
+    "bytes": 1490
+  },
+  "RUN_CONTINUE.bat": {
+    "sha256": "1c821120640aa5414cc023e780136b7e519406cc982a97075c9cfebd42bac2f0",
+    "bytes": 77
+  },
+  "RUN_GRAPH.bat": {
+    "sha256": "c2f7ddc8134934ee4c7a331d7da796a2b9d387eeb69785f211041ba91ab630a2",
+    "bytes": 91
+  },
+  "RUN_RESULT.bat": {
+    "sha256": "fe96f5bed9236eb5792bc996e618cc6dab09bdef039d3e9c6c023edd0aaec64f",
+    "bytes": 73
+  },
+  "RUN_SCAN.bat": {
+    "sha256": "3211a95b9afd8f6a63ac5e8dc241e3dfc1aa5b85db66b489b00e618bdc398e46",
+    "bytes": 69
+  },
+  "RUN_STATUS.bat": {
+    "sha256": "583006b3c296c3da18d72284fce24ef7f392740777fe113c31e775440cf66c0a",
+    "bytes": 73
+  },
+  "TASK.md": {
+    "sha256": "77abf6208143fa53bdd4b21df537dc4cbd00f72d1a1eec98cca9c5a7594037e8",
+    "bytes": 177
+  },
+  "TASK.txt": {
+    "sha256": "80041170dfcd6ced2c77fa03aea1caaa3062dff4d7c57310bec720bc6a51bb22",
+    "bytes": 59
+  },
+  "TRANSFORMER_ATTENTION_NOTES.md": {
+    "sha256": "fb2001a919c8b073039fc4e53972d0d9bc24f12fa9d1690ac0ab771a250d2d83",
+    "bytes": 847
+  },
+  "USER_MANUAL.md": {
+    "sha256": "fb13736a915ba602952294e3d4902b42f476f74982e81df6c91dd8c17ca110a0",
+    "bytes": 1757
+  },
+  "USER_PROMPT_CONTINUE_EN.txt": {
+    "sha256": "bac1ea564789c43c05735df05c72e2d1cb9a3c8e7f1e7585bb145b41e52fd86b",
+    "bytes": 88
+  },
+  "USER_PROMPT_CONTINUE_UA.txt": {
+    "sha256": "bf668f537856ad2bd0baeca8685470f24dbe6160a4ffc776de4c541e25acc9b0",
+    "bytes": 116
+  },
+  "USER_PROMPT_FOR_ANTIGRAVITY_EN.txt": {
+    "sha256": "24c8fae09cb8f62a26ca712d8ffc877ad789008f267943d8b9b53f0e3026cc5a",
+    "bytes": 86
+  },
+  "USER_PROMPT_FOR_ANTIGRAVITY_UA.txt": {
+    "sha256": "aa1aaa38d67ffa6907c33faaf725ed56d74b95edbf16ff7fd54b147b20a07df7",
+    "bytes": 123
+  },
+  "run.py": {
+    "sha256": "1d83e68df365c061c67d20030162a67459380788b2c1f967079e49bfcc5cdcf8",
+    "bytes": 16995
+  },
+  "src/laca/__init__.py": {
+    "sha256": "07b1a23b4adde3d630b4b623bcf83896609910394c4e89ec95029d48899a3099",
+    "bytes": 22
+  },
+  "src/laca/cli.py": {
+    "sha256": "811016115e20a70cec4653ef5fe43d62fd306fe2eda1dfe434a1c5509d5cab89",
+    "bytes": 27256
+  },
+  "src/laca/code_graph.py": {
+    "sha256": "ec269a83ede832af934fc49714741f3221218d2da883ec2d18226159d7449235",
+    "bytes": 21472
+  },
+  "src/laca/field_ranker.cpp": {
+    "sha256": "44196dbf6d236c020fe58488d6ac0b8b18104e2ad4c95df56236b15257ee4b17",
+    "bytes": 2169
+  },
+  "ІНСТРУКЦІЯ_UA.md": {
+    "sha256": "0b4bf9705961b2935d4be91fd7d9799e5d35fab0f294d6a686420af5e6f8c768",
+    "bytes": 807
+  },
+  "МАНУАЛ_UA.md": {
+    "sha256": "1bd3a19b7e6558fd3efd3964d1b9b9e0fbaa4236c08ae51e9f58cc7834b2a9e9",
+    "bytes": 2733
+  },
+  "ПРОДОВЖИТИ_UA.md": {
+    "sha256": "eabf865e1a5301f5ea1e5e882d90764eeb97309a5831908e36ea3a9725066252",
+    "bytes": 953
+  },
+  "ТЗ_UA.md": {
+    "sha256": "12e3609ab68ea9b4f8b39e36d919c0c2e73bfe2dd6616f8fccba081cb9ac31e7",
+    "bytes": 240
+  }
 }

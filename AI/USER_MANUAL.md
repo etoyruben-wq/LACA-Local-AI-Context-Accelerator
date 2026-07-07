@@ -65,3 +65,14 @@ During the first run and during CONTINUE, this task spec is automatically pulled
 ## 5. v0.8.1 public patch
 
 This version uses BM25F-style field ranking and a Unicode-aware tokenizer. This improves file selection in projects that contain Ukrainian, Cyrillic, mixed-language filenames, Markdown reports, scripts, and status logs.
+
+
+## Optional: code graph
+
+For more complex coding tasks, run:
+
+```bat
+py AI\run.py graph
+```
+
+This creates `AI_OUT/code_graph.json`, `code_symbols.tsv`, `import_edges.tsv`, `call_edges.tsv`, and `attention_guide.md`. The graph is used as an attention map, not as a full prompt dump.

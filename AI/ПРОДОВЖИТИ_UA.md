@@ -35,3 +35,5 @@ AI_OUT/context_report.md
 ```cmd
 py AI\run.py result
 ```
+
+Після continue агент також може прочитати `AI_OUT/attention_guide.md`, якщо задача стосується коду. Не вставляй повний `code_graph.json` у prompt без потреби.
