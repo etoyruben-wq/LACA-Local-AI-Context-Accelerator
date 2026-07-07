@@ -9,12 +9,13 @@ import os
 import re
 import sys
 import time
+import unicodedata
 from collections import Counter
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Iterable, Sequence
 
-VERSION = "0.8.0"
+VERSION = "0.8.1"
 
 DEFAULT_EXCLUDE_DIRS = {
     ".git", ".hg", ".svn", ".idea", ".vscode", ".cache", ".pytest_cache",
@@ -61,7 +62,9 @@ TYPE_WEIGHTS = {
     ".bat": 0.75, ".ps1": 0.75, ".sh": 0.75,
 }
 
-TOKEN_RE = re.compile(r"[A-Za-z0-9_+.#/-]+")
+# Unicode-aware tokenizer: keeps Ukrainian/Cyrillic identifiers and mixed Latin/Cyrillic file names.
+# This is intentionally simple and dependency-free for public/local use.
+TOKEN_RE = re.compile(r"[\w]+(?:[.+#-][\w]+)*", re.UNICODE)
 
 @dataclass
 class FileNode:
@@ -97,8 +100,25 @@ def normalize_patterns(value: str | None) -> list[str]:
     return [p.strip() for p in value.split(",") if p.strip()]
 
 
+def normalize_text(text: str) -> str:
+    """Normalize text before tokenization.
+
+    NFKC keeps Unicode text stable across copied filenames, Markdown files, and
+    mixed-language projects. Casefold handles Cyrillic/Latin casing better than
+    plain lower().
+    """
+    return unicodedata.normalize("NFKC", text).casefold()
+
+
 def tokenize(text: str) -> list[str]:
-    return [m.group(0).lower() for m in TOKEN_RE.finditer(text)]
+    return [m.group(0) for m in TOKEN_RE.finditer(normalize_text(text))]
+
+
+def split_identifier_tokens(text: str) -> list[str]:
+    """Tokenize paths and identifiers without losing Cyrillic words."""
+    text = re.sub(r"([a-zа-яіїєґ])([A-ZА-ЯІЇЄҐ])", r"\1 \2", text)
+    text = text.replace("_", " ").replace("/", " ").replace("\\", " ").replace(".", " ")
+    return tokenize(text)
 
 
 def matches_any(path_str: str, patterns: Sequence[str]) -> bool:
@@ -150,6 +170,77 @@ def recency_score(mtime: float, now: float) -> float:
     return 1.0 / (1.0 + age_days / 90.0)
 
 
+
+def extract_heading_text(sample: str, max_lines: int = 80) -> str:
+    """Extract Markdown-like headings and high-signal title lines for field ranking."""
+    heads: list[str] = []
+    for line in sample.splitlines()[:max_lines]:
+        s = line.strip()
+        if not s:
+            continue
+        if s.startswith("#") or s.endswith(":") or s.isupper():
+            heads.append(s)
+    return "\n".join(heads)
+
+
+def extract_status_text(sample: str, rel_path: str) -> str:
+    """Extract PASS/FAIL/BLOCKED/TODO-like evidence as a separate field."""
+    keys = (
+        "pass", "passed", "success", "ok", "done", "complete",
+        "fail", "failed", "error", "exception", "broken",
+        "blocked", "blocker", "todo", "missing", "pending", "not_100",
+        "пас", "готово", "помилка", "заблок", "блокер", "треба", "не працює",
+    )
+    out = [rel_path]
+    for line in sample.splitlines()[:220]:
+        low = normalize_text(line)
+        if any(k in low for k in keys):
+            out.append(line)
+    return "\n".join(out)
+
+
+def bm25f_style_relevance_score(focus: str, rel_path: str, sample: str) -> tuple[float, list[str]]:
+    """BM25F-style field ranking for local AI project context.
+
+    This is not a search-engine clone. It is a small dependency-free field scorer
+    inspired by BM25F: query terms are matched separately against filename, path,
+    headings, content preview, and status evidence with different weights and
+    term-frequency saturation. It is intentionally public-friendly and avoids
+    private/vector terminology.
+    """
+    focus_tokens = [t for t in split_identifier_tokens(focus) if len(t) > 1]
+    if not focus_tokens:
+        return 0.0, []
+    unique_focus = list(dict.fromkeys(focus_tokens))
+    p = Path(rel_path)
+    fields: dict[str, tuple[list[str], float]] = {
+        "filename": (split_identifier_tokens(p.name), 3.5),
+        "path": (split_identifier_tokens(str(p.parent)), 1.8),
+        "headings": (tokenize(extract_heading_text(sample)), 2.4),
+        "status": (tokenize(extract_status_text(sample, rel_path)), 1.6),
+        "content": (tokenize(sample), 1.0),
+    }
+    counts = {name: Counter(tokens) for name, (tokens, _w) in fields.items()}
+    k1 = 1.25
+    raw = 0.0
+    reasons: list[str] = []
+    for q in unique_focus:
+        field_tf = 0.0
+        hit_fields: list[str] = []
+        for name, (_tokens, weight) in fields.items():
+            tf = counts[name].get(q, 0)
+            if tf:
+                # Saturate high counts so one repeated word cannot dominate.
+                sat = (tf * (k1 + 1.0)) / (tf + k1)
+                field_tf += weight * sat
+                hit_fields.append(name)
+        if field_tf > 0:
+            raw += field_tf
+            reasons.append(f"bm25f:{q}@{','.join(hit_fields[:3])}")
+    # Normalize to a compact 0..1 range for easy downstream mixing.
+    norm = min(1.0, raw / max(4.0, len(unique_focus) * 3.2))
+    return norm, reasons[:8]
+
 def exact_path_bonus(rel_path: str, focus_tokens: set[str]) -> tuple[float, list[str]]:
     if not focus_tokens:
         return 0.0, []
@@ -168,17 +259,8 @@ def exact_path_bonus(rel_path: str, focus_tokens: set[str]) -> tuple[float, list
 
 
 def relevance_score(focus: str, rel_path: str, sample: str) -> tuple[float, list[str]]:
-    focus_tokens = {t for t in tokenize(focus) if len(t) > 2}
-    if not focus_tokens:
-        return 0.0, []
-    content_tokens = Counter(tokenize(rel_path + "\n" + sample))
-    overlap = sum(min(content_tokens.get(t, 0), 3) for t in focus_tokens)
-    denom = math.sqrt(len(focus_tokens) * max(1, sum(1 for t in focus_tokens if content_tokens.get(t, 0) > 0)))
-    base = min(1.0, overlap / max(1.0, denom * 2.5))
-    bonus, reasons = exact_path_bonus(rel_path, focus_tokens)
-    if base > 0:
-        reasons.insert(0, f"token_overlap:{overlap}")
-    return min(1.0, base + bonus), reasons
+    # Public v0.8.1: use BM25F-style field ranking with Unicode/Cyrillic tokenization.
+    return bm25f_style_relevance_score(focus, rel_path, sample)
 
 
 def artifact_usefulness(ext: str, rel_path: str, domain: str) -> tuple[float, list[str]]:
@@ -341,12 +423,12 @@ def write_outputs(nodes: list[FileNode], out_dir: Path, project_name: str, focus
         save_map(state_dir, index_data)
         (state_dir / "last_context_state.vmem").write_text("", encoding="utf-8")  # placeholder overwritten below
     lines = [
-        f"CENTER|{project_name}|focus={focus or 'general'}|top_k={top_k}|coord=x,z,y|version={VERSION}|mode={mode}",
+        f"CENTER|{project_name}|focus={focus or 'general'}|top_k={top_k}|ranking=bm25f_field|scores=task,status_evidence,artifact_value|version={VERSION}|mode={mode}",
         "RULE|expand_only_top_points|do_one_action|write_RESULT_vmem_after_action",
         "RULE|use_AI/run.py_continue_next_time|do_not_start_from_zero_if_AI_STATE_exists",
     ]
     for n in top:
-        lines.append(f"POINT|{n.id}|domain={n.domain}|status={n.status}|score={n.score:.4f}|x={n.x:.4f}|z={n.z:.4f}|y={n.y:.4f}|file={n.path}")
+        lines.append(f"POINT|{n.id}|domain={n.domain}|status={n.status}|score={n.score:.4f}|task={n.x:.4f}|status_evidence={n.z:.4f}|artifact_value={n.y:.4f}|file={n.path}")
     lines.append("NEXT|read_top_points|choose_one_action|write_RESULT.vmem")
     context_text = "\n".join(lines) + "\n"
     (out_dir / "context_state.vmem").write_text(context_text, encoding="utf-8")
@@ -354,13 +436,13 @@ def write_outputs(nodes: list[FileNode], out_dir: Path, project_name: str, focus
         (state_dir / "last_context_state.vmem").write_text(context_text, encoding="utf-8")
 
     with (out_dir / "action_points.tsv").open("w", encoding="utf-8") as f:
-        f.write("rank\tid\tscore\tx\tz\ty\tdomain\tstatus\tsize\tsha256\tpath\treason\n")
+        f.write("rank\tid\tscore\ttask\tstatus_evidence\tartifact_value\tdomain\tstatus\tsize\tsha256\tpath\treason\n")
         for i, n in enumerate(top, 1):
             f.write(f"{i}\t{n.id}\t{n.score:.4f}\t{n.x:.4f}\t{n.z:.4f}\t{n.y:.4f}\t{n.domain}\t{n.status}\t{n.size}\t{n.sha256}\t{n.path}\t{';'.join(n.reason)}\n")
     if state_dir:
         (state_dir / "last_action_points.tsv").write_text((out_dir / "action_points.tsv").read_text(encoding="utf-8"), encoding="utf-8")
 
-    report = ["# LACA Context Report", "", f"Project: `{project_name}`", f"Focus: `{focus or 'general'}`", f"Mode: `{mode}`", f"Files indexed: **{len(nodes)}**", f"Top points exported: **{len(top)}**", ""]
+    report = ["# LACA Context Report", "", f"Project: `{project_name}`", f"Focus: `{focus or 'general'}`", f"Mode: `{mode}`", f"Files indexed: **{len(nodes)}**", f"Top points exported: **{len(top)}**", "Ranking: **BM25F-style field ranking with Unicode/Cyrillic tokenization**", ""]
     if delta:
         report += ["## Incremental update", "", f"- Added: **{len(delta.get('added', []))}**", f"- Changed: **{len(delta.get('changed', []))}**", f"- Deleted: **{len(delta.get('deleted', []))}**", f"- Reused unchanged entries: **{delta.get('reused', 0)}**", ""]
     report += ["## Top points", ""]

@@ -112,7 +112,7 @@ def write_task_state(out_dir: Path, state_dir: Path, mode: str) -> dict:
             previous = {}
     changed = previous.get("sha256") != task["sha256"]
     record = {
-        "version": "0.8.0",
+        "version": "0.8.1",
         "mode": mode,
         "time": time.time(),
         "task_file": task["path"],

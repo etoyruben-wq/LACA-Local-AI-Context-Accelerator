@@ -61,3 +61,7 @@ Write briefly:
 ```
 
 During the first run and during CONTINUE, this task spec is automatically pulled into the agent context.
+
+## 5. v0.8.1 public patch
+
+This version uses BM25F-style field ranking and a Unicode-aware tokenizer. This improves file selection in projects that contain Ukrainian, Cyrillic, mixed-language filenames, Markdown reports, scripts, and status logs.
