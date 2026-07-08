@@ -1,1 +1,0 @@
-There is an AI folder in the project root. Open it and follow the instruction inside.
